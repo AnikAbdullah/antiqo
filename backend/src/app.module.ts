@@ -11,6 +11,7 @@ import { OffersModule } from './offers/offers.module';
 import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
 import { ReportsModule } from './reports/reports.module';
+import { ReturnsModule } from './returns/returns.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ShopsModule } from './shops/shops.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module';
     WishlistsModule,
     ReviewsModule,
     ReportsModule,
+    ReturnsModule,
   ],
   controllers: [AppController],
   providers: [
