@@ -29,6 +29,16 @@ export class UsersService {
     return profile;
   }
 
+  async updateProfile(id: number, changes: { name?: string }) {
+    const user = await this.findById(id);
+    if (changes.name !== undefined) {
+      user.name = changes.name;
+    }
+    const saved = await this.users.save(user);
+    const { passwordHash, ...profile } = saved;
+    return profile;
+  }
+
   createUser(data: { name: string; email: string; passwordHash: string; role?: UserRole }) {
     const user = this.users.create(data);
     return this.users.save(user);
