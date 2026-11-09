@@ -23,6 +23,12 @@ export class UsersService {
     return user;
   }
 
+  async getProfile(id: number) {
+    const user = await this.findById(id);
+    const { passwordHash, ...profile } = user;
+    return profile;
+  }
+
   createUser(data: { name: string; email: string; passwordHash: string; role?: UserRole }) {
     const user = this.users.create(data);
     return this.users.save(user);
