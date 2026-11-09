@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
 import { ShopsModule } from './shops/shops.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     CategoriesModule,
     ShopsModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [
