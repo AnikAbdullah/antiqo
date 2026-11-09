@@ -11,6 +11,7 @@ import { OffersModule } from './offers/offers.module';
 import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
 import { ShopsModule } from './shops/shops.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { validateEnv } from './config/env.validation';
@@ -36,6 +37,7 @@ import { UsersModule } from './users/users.module';
     CartModule,
     OrdersModule,
     OffersModule,
+    WishlistsModule,
   ],
   controllers: [AppController],
   providers: [
