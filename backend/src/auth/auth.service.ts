@@ -1,17 +1,30 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    @InjectRepository(PasswordResetToken)
+    private readonly resetTokens: Repository<PasswordResetToken>,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -42,6 +55,39 @@ export class AuthService {
     }
 
     return this.buildResponse(user);
+  }
+
+  async requestPasswordReset(dto: RequestPasswordResetDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user) {
+      return { message: 'If that email exists, a reset link has been sent.' };
+    }
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
+    const token = this.resetTokens.create({
+      userId: user.id,
+      token: randomBytes(24).toString('hex'),
+      expiresAt,
+      usedAt: null,
+    });
+    const saved = await this.resetTokens.save(token);
+    return { token: saved.token, expiresAt: saved.expiresAt };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const record = await this.resetTokens.findOne({
+      where: { token: dto.token },
+    });
+    if (!record || record.usedAt) {
+      throw new BadRequestException('Invalid reset token.');
+    }
+    if (record.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Reset token has expired.');
+    }
+    const passwordHash = await argon2.hash(dto.newPassword);
+    await this.usersService.updatePasswordHash(record.userId, passwordHash);
+    record.usedAt = new Date();
+    await this.resetTokens.save(record);
+    return { reset: true };
   }
 
   private buildResponse(user: User) {
