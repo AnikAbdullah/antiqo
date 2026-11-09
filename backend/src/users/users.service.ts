@@ -1,7 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserRole } from '../common/enums/user-role.enum';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -9,6 +15,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly users: Repository<User>,
+    @InjectRepository(EmailVerificationToken)
+    private readonly verificationTokens: Repository<EmailVerificationToken>,
   ) {}
 
   findByEmail(email: string) {
@@ -42,5 +50,39 @@ export class UsersService {
   createUser(data: { name: string; email: string; passwordHash: string; role?: UserRole }) {
     const user = this.users.create(data);
     return this.users.save(user);
+  }
+
+  async requestEmailVerification(userId: number) {
+    const user = await this.findById(userId);
+    if (user.emailVerified) {
+      throw new BadRequestException('Email is already verified.');
+    }
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
+    const token = this.verificationTokens.create({
+      userId: user.id,
+      token: randomBytes(24).toString('hex'),
+      expiresAt,
+      usedAt: null,
+    });
+    const saved = await this.verificationTokens.save(token);
+    return { token: saved.token, expiresAt: saved.expiresAt };
+  }
+
+  async verifyEmail(rawToken: string) {
+    const record = await this.verificationTokens.findOne({
+      where: { token: rawToken },
+    });
+    if (!record || record.usedAt) {
+      throw new BadRequestException('Invalid verification token.');
+    }
+    if (record.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Verification token has expired.');
+    }
+    const user = await this.findById(record.userId);
+    user.emailVerified = true;
+    await this.users.save(user);
+    record.usedAt = new Date();
+    await this.verificationTokens.save(record);
+    return { verified: true };
   }
 }
