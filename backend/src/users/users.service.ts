@@ -52,6 +52,12 @@ export class UsersService {
     return this.users.save(user);
   }
 
+  async updatePasswordHash(userId: number, passwordHash: string) {
+    const user = await this.findById(userId);
+    user.passwordHash = passwordHash;
+    return this.users.save(user);
+  }
+
   async requestEmailVerification(userId: number) {
     const user = await this.findById(userId);
     if (user.emailVerified) {
