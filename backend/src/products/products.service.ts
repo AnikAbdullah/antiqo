@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
+import { ProductStatus } from '../common/enums/product-status.enum';
 import { Shop } from '../shops/entities/shop.entity';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -41,5 +42,24 @@ export class ProductsService {
       condition: dto.condition,
     });
     return this.products.save(product);
+  }
+
+  findAll() {
+    return this.products.find({
+      where: { status: ProductStatus.ACTIVE },
+      relations: { shop: true, category: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: number) {
+    const product = await this.products.findOne({
+      where: { id },
+      relations: { shop: true, category: true },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found.');
+    }
+    return product;
   }
 }
