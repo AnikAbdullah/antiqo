@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -13,6 +14,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import type { AuthUser } from '../common/interfaces/authenticated-request.interface';
 import { CartService } from './cart.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Controller('cart')
 export class CartController {
@@ -28,6 +30,16 @@ export class CartController {
   @Get()
   view(@CurrentUser() current: AuthUser) {
     return this.cartService.viewCart(current.userId);
+  }
+
+  @Roles(UserRole.BUYER)
+  @Patch(':productId')
+  changeQuantity(
+    @CurrentUser() current: AuthUser,
+    @Param('productId', ParseIntPipe) productId: number,
+    @Body() dto: UpdateCartItemDto,
+  ) {
+    return this.cartService.changeQuantity(current.userId, productId, dto.quantity);
   }
 
   @Roles(UserRole.BUYER)
