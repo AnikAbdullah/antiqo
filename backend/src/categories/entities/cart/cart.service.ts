@@ -62,4 +62,15 @@ export class CartService {
     await this.cartItems.remove(item);
     return { removed: true };
   }
+
+  async changeQuantity(buyerId: number, productId: number, quantity: number) {
+    const item = await this.cartItems.findOne({
+      where: { buyerId, productId },
+    });
+    if (!item) {
+      throw new NotFoundException('This product is not in your cart.');
+    }
+    item.quantity = quantity;
+    return this.cartItems.save(item);
+  }
 }
