@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -13,6 +15,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import type { AuthUser } from '../common/interfaces/authenticated-request.interface';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -34,5 +37,24 @@ export class ProductsController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.findOne(id);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id')
+  update(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProductDto,
+  ) {
+    return this.productsService.update(current.userId, id, dto);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Delete(':id')
+  remove(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.productsService.remove(current.userId, id);
   }
 }
