@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
@@ -20,5 +28,14 @@ export class CartController {
   @Get()
   view(@CurrentUser() current: AuthUser) {
     return this.cartService.viewCart(current.userId);
+  }
+
+  @Roles(UserRole.BUYER)
+  @Delete(':productId')
+  remove(
+    @CurrentUser() current: AuthUser,
+    @Param('productId', ParseIntPipe) productId: number,
+  ) {
+    return this.cartService.removeItem(current.userId, productId);
   }
 }

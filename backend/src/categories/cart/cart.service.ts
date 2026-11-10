@@ -51,4 +51,15 @@ export class CartService {
       order: { createdAt: 'ASC' },
     });
   }
+
+  async removeItem(buyerId: number, productId: number) {
+    const item = await this.cartItems.findOne({
+      where: { buyerId, productId },
+    });
+    if (!item) {
+      throw new NotFoundException('This product is not in your cart.');
+    }
+    await this.cartItems.remove(item);
+    return { removed: true };
+  }
 }
