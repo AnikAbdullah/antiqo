@@ -43,4 +43,12 @@ export class CartService {
     });
     return this.cartItems.save(item);
   }
+
+  viewCart(buyerId: number) {
+    return this.cartItems.find({
+      where: { buyerId },
+      relations: { product: true },
+      order: { createdAt: 'ASC' },
+    });
+  }
 }
