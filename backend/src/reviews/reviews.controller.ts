@@ -1,5 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import type { AuthUser } from '../common/interfaces/authenticated-request.interface';
@@ -14,5 +22,11 @@ export class ReviewsController {
   @Post()
   create(@CurrentUser() current: AuthUser, @Body() dto: CreateReviewDto) {
     return this.reviewsService.create(current.userId, dto);
+  }
+
+  @Public()
+  @Get()
+  listByShop(@Query('shopId', ParseIntPipe) shopId: number) {
+    return this.reviewsService.listByShop(shopId);
   }
 }

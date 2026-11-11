@@ -27,4 +27,12 @@ export class ReviewsService {
     });
     return this.reviews.save(review);
   }
+
+  listByShop(shopId: number) {
+    return this.reviews.find({
+      where: { shopId, visible: true },
+      relations: { buyer: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
 }
