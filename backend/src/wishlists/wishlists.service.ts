@@ -27,4 +27,23 @@ export class WishlistsService {
     const entry = this.wishlists.create({ userId, productId });
     return this.wishlists.save(entry);
   }
+
+  list(userId: number) {
+    return this.wishlists.find({
+      where: { userId },
+      relations: { product: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async remove(userId: number, productId: number) {
+    const entry = await this.wishlists.findOne({
+      where: { userId, productId },
+    });
+    if (!entry) {
+      throw new NotFoundException('This product is not in your wishlist.');
+    }
+    await this.wishlists.remove(entry);
+    return { removed: true };
+  }
 }
