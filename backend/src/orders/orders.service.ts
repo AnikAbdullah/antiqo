@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
+import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { Product } from '../products/entities/product.entity';
 import { Shop } from '../shops/entities/shop.entity';
 import { OrderItem } from './entities/order-item.entity';
@@ -149,6 +150,20 @@ export class OrdersService {
       throw new BadRequestException('Only a shipped order can be delivered.');
     }
     order.status = OrderStatus.DELIVERED;
+    return this.orders.save(order);
+  }
+
+  async recordCod(sellerId: number, id: number) {
+    const order = await this.findSellerOrder(sellerId, id);
+    if (order.status !== OrderStatus.DELIVERED) {
+      throw new BadRequestException(
+        'Cash can only be recorded on a delivered order.',
+      );
+    }
+    if (order.paymentStatus !== PaymentStatus.COD_PENDING) {
+      throw new BadRequestException('Payment is already settled for this order.');
+    }
+    order.paymentStatus = PaymentStatus.COD_COLLECTED;
     return this.orders.save(order);
   }
 
