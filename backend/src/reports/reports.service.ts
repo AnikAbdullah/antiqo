@@ -1,63 +1,48 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderStatus } from '../common/enums/order-status.enum';
-import { Order } from '../orders/entities/order.entity';
-import { Shop } from '../shops/entities/shop.entity';
-import { Review } from './entities/review.entity';
-import { CreateReviewDto } from './dto/create-review.dto';
+import { ReportStatus } from '../common/enums/report-status.enum';
+import { Product } from '../products/entities/product.entity';
+import { Report } from './entities/report.entity';
+import { CreateReportDto } from './dto/create-report.dto';
 
 @Injectable()
-export class ReviewsService {
+export class ReportsService {
   constructor(
-    @InjectRepository(Review)
-    private readonly reviews: Repository<Review>,
-    @InjectRepository(Shop)
-    private readonly shops: Repository<Shop>,
-    @InjectRepository(Order)
-    private readonly orders: Repository<Order>,
+    @InjectRepository(Report)
+    private readonly reports: Repository<Report>,
+    @InjectRepository(Product)
+    private readonly products: Repository<Product>,
   ) {}
 
-  async create(buyerId: number, dto: CreateReviewDto) {
-    const shop = await this.shops.findOne({ where: { id: dto.shopId } });
-    if (!shop) {
-      throw new NotFoundException('Shop not found.');
-    }
-    const deliveredOrder = await this.orders.findOne({
-      where: { buyerId, shopId: dto.shopId, status: OrderStatus.DELIVERED },
+  async create(reporterId: number, dto: CreateReportDto) {
+    const product = await this.products.findOne({
+      where: { id: dto.productId },
     });
-    if (!deliveredOrder) {
-      throw new ForbiddenException(
-        'You can only review a shop after a delivered order.',
-      );
+    if (!product) {
+      throw new NotFoundException('Product not found.');
     }
-    const review = this.reviews.create({
-      buyerId,
-      shopId: dto.shopId,
-      rating: dto.rating,
-      body: dto.body,
+    const report = this.reports.create({
+      reporterId,
+      productId: dto.productId,
+      reason: dto.reason,
     });
-    return this.reviews.save(review);
+    return this.reports.save(report);
   }
 
-  listByShop(shopId: number) {
-    return this.reviews.find({
-      where: { shopId, visible: true },
-      relations: { buyer: true },
+  findAll() {
+    return this.reports.find({
+      relations: { reporter: true, product: true },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async moderate(id: number) {
-    const review = await this.reviews.findOne({ where: { id } });
-    if (!review) {
-      throw new NotFoundException('Review not found.');
+  async resolve(id: number) {
+    const report = await this.reports.findOne({ where: { id } });
+    if (!report) {
+      throw new NotFoundException('Report not found.');
     }
-    review.visible = false;
-    return this.reviews.save(review);
+    report.status = ReportStatus.RESOLVED;
+    return this.reports.save(report);
   }
 }
