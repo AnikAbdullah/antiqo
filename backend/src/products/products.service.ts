@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { ProductStatus } from '../common/enums/product-status.enum';
 import { Shop } from '../shops/entities/shop.entity';
@@ -49,9 +49,15 @@ export class ProductsService {
     return this.products.save(product);
   }
 
-  findAll() {
+  findAll(search?: string) {
+    const where: FindOptionsWhere<Product> = {
+      status: ProductStatus.ACTIVE,
+    };
+    if (search) {
+      where.title = ILike(`%${search}%`);
+    }
     return this.products.find({
-      where: { status: ProductStatus.ACTIVE },
+      where,
       relations: { shop: true, category: true },
       order: { createdAt: 'DESC' },
     });
