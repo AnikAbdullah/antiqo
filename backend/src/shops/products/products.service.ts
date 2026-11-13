@@ -10,6 +10,7 @@ import { Category } from '../categories/entities/category.entity';
 import { ProductStatus } from '../common/enums/product-status.enum';
 import { Shop } from '../shops/entities/shop.entity';
 import { Product } from './entities/product.entity';
+import { ProductImage } from './entities/product-image.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -22,6 +23,8 @@ export class ProductsService {
     private readonly shops: Repository<Shop>,
     @InjectRepository(Category)
     private readonly categories: Repository<Category>,
+    @InjectRepository(ProductImage)
+    private readonly productImages: Repository<ProductImage>,
   ) {}
 
   async create(sellerId: number, dto: CreateProductDto) {
@@ -95,6 +98,22 @@ export class ProductsService {
     const product = await this.findOwned(sellerId, id);
     await this.products.remove(product);
     return { deleted: true };
+  }
+
+  async addImage(
+    sellerId: number,
+    productId: number,
+    file: { path: string } | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No image uploaded.');
+    }
+    const product = await this.findOwned(sellerId, productId);
+    const image = this.productImages.create({
+      productId: product.id,
+      path: file.path,
+    });
+    return this.productImages.save(image);
   }
 
   private async findOwned(sellerId: number, id: number) {
