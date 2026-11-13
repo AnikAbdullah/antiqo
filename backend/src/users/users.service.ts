@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserRole } from '../common/enums/user-role.enum';
+import { UserStatus } from '../common/enums/user-status.enum';
 import { MailService } from '../mail/mail.service';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { User } from './entities/user.entity';
@@ -52,6 +53,22 @@ export class UsersService {
   createUser(data: { name: string; email: string; passwordHash: string; role?: UserRole }) {
     const user = this.users.create(data);
     return this.users.save(user);
+  }
+
+  async setStatus(id: number, status: UserStatus) {
+    const user = await this.findById(id);
+    user.status = status;
+    const saved = await this.users.save(user);
+    const { passwordHash, ...profile } = saved;
+    return profile;
+  }
+
+  suspend(id: number) {
+    return this.setStatus(id, UserStatus.SUSPENDED);
+  }
+
+  reactivate(id: number) {
+    return this.setStatus(id, UserStatus.ACTIVE);
   }
 
   async updatePasswordHash(userId: number, passwordHash: string) {
