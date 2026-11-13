@@ -15,6 +15,7 @@ import {
 } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { ProductStatus } from '../common/enums/product-status.enum';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { Shop } from '../shops/entities/shop.entity';
 import { Product } from './entities/product.entity';
 import { ProductImage } from './entities/product-image.entity';
@@ -56,12 +57,14 @@ export class ProductsService {
     return this.products.save(product);
   }
 
-  findAll(filters: {
+  async findAll(filters: {
     search?: string;
     categoryId?: number;
     minPrice?: number;
     maxPrice?: number;
-  }) {
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResult<Product>> {
     const where: FindOptionsWhere<Product> = {
       status: ProductStatus.ACTIVE,
     };
@@ -79,11 +82,18 @@ export class ProductsService {
     } else if (maxPrice !== undefined) {
       where.price = LessThanOrEqual(maxPrice.toFixed(2));
     }
-    return this.products.find({
+
+    const page = filters.page && filters.page > 0 ? filters.page : 1;
+    const limit = Math.min(filters.limit && filters.limit > 0 ? filters.limit : 12, 50);
+
+    const [items, total] = await this.products.findAndCount({
       where,
       relations: { shop: true, category: true },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { items, total, page, limit };
   }
 
   async findOne(id: number) {
