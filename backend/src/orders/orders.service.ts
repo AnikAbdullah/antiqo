@@ -134,6 +134,24 @@ export class OrdersService {
     return this.orders.save(order);
   }
 
+  async markShipped(sellerId: number, id: number) {
+    const order = await this.findSellerOrder(sellerId, id);
+    if (order.status !== OrderStatus.CONFIRMED) {
+      throw new BadRequestException('Only a confirmed order can be shipped.');
+    }
+    order.status = OrderStatus.SHIPPED;
+    return this.orders.save(order);
+  }
+
+  async markDelivered(sellerId: number, id: number) {
+    const order = await this.findSellerOrder(sellerId, id);
+    if (order.status !== OrderStatus.SHIPPED) {
+      throw new BadRequestException('Only a shipped order can be delivered.');
+    }
+    order.status = OrderStatus.DELIVERED;
+    return this.orders.save(order);
+  }
+
   private async findSellerOrder(sellerId: number, id: number) {
     const order = await this.orders.findOne({ where: { id } });
     if (!order) {
