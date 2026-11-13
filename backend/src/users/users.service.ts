@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserRole } from '../common/enums/user-role.enum';
+import { MailService } from '../mail/mail.service';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { User } from './entities/user.entity';
 
@@ -17,6 +18,7 @@ export class UsersService {
     private readonly users: Repository<User>,
     @InjectRepository(EmailVerificationToken)
     private readonly verificationTokens: Repository<EmailVerificationToken>,
+    private readonly mail: MailService,
   ) {}
 
   findByEmail(email: string) {
@@ -71,6 +73,7 @@ export class UsersService {
       usedAt: null,
     });
     const saved = await this.verificationTokens.save(token);
+    await this.mail.sendVerificationEmail(user.email, saved.token);
     return { token: saved.token, expiresAt: saved.expiresAt };
   }
 
