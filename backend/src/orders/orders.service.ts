@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -47,6 +48,11 @@ export class OrdersService {
         });
         if (!product) {
           throw new NotFoundException('A product in your cart no longer exists.');
+        }
+        if (product.stock < line.quantity) {
+          throw new ConflictException(
+            `Not enough stock for "${product.title}".`,
+          );
         }
         product.stock -= line.quantity;
         await runner.manager.save(product);
