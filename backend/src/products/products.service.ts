@@ -5,7 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import {
+  Between,
+  FindOptionsWhere,
+  ILike,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { ProductStatus } from '../common/enums/product-status.enum';
 import { Shop } from '../shops/entities/shop.entity';
@@ -49,12 +56,28 @@ export class ProductsService {
     return this.products.save(product);
   }
 
-  findAll(search?: string) {
+  findAll(filters: {
+    search?: string;
+    categoryId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+  }) {
     const where: FindOptionsWhere<Product> = {
       status: ProductStatus.ACTIVE,
     };
-    if (search) {
-      where.title = ILike(`%${search}%`);
+    if (filters.search) {
+      where.title = ILike(`%${filters.search}%`);
+    }
+    if (filters.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+    const { minPrice, maxPrice } = filters;
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      where.price = Between(minPrice.toFixed(2), maxPrice.toFixed(2));
+    } else if (minPrice !== undefined) {
+      where.price = MoreThanOrEqual(minPrice.toFixed(2));
+    } else if (maxPrice !== undefined) {
+      where.price = LessThanOrEqual(maxPrice.toFixed(2));
     }
     return this.products.find({
       where,
