@@ -75,3 +75,13 @@ export class OrdersController {
   ) {
     return this.ordersService.markDelivered(current.userId, id);
   }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id/record-cod')
+  recordCod(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.recordCod(current.userId, id);
+  }
+}
