@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CartItem } from '../cart/entities/cart-item.entity';
@@ -19,6 +20,7 @@ export class OrdersService {
     @InjectRepository(CartItem)
     private readonly cartItems: Repository<CartItem>,
     private readonly dataSource: DataSource,
+    private readonly config: ConfigService,
   ) {}
 
   async checkout(buyerId: number) {
@@ -69,7 +71,8 @@ export class OrdersService {
         items.push(item);
       }
 
-      order.total = total.toFixed(2);
+      const deliveryFee = Number(this.config.get<string>('DELIVERY_FEE') ?? '0');
+      order.total = (total + deliveryFee).toFixed(2);
       await runner.manager.save(order);
       await runner.manager.remove(cart);
 
