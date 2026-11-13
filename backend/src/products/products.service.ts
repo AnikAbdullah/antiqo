@@ -1,0 +1,111 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Category } from '../categories/entities/category.entity';
+import { ProductStatus } from '../common/enums/product-status.enum';
+import { Shop } from '../shops/entities/shop.entity';
+import { Product } from './entities/product.entity';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+
+@Injectable()
+export class ProductsService {
+  constructor(
+    @InjectRepository(Product)
+    private readonly products: Repository<Product>,
+    @InjectRepository(Shop)
+    private readonly shops: Repository<Shop>,
+    @InjectRepository(Category)
+    private readonly categories: Repository<Category>,
+  ) {}
+
+  async create(sellerId: number, dto: CreateProductDto) {
+    const shop = await this.shops.findOne({ where: { sellerId } });
+    if (!shop) {
+      throw new BadRequestException('You need a shop before adding products.');
+    }
+    const category = await this.categories.findOne({
+      where: { id: dto.categoryId },
+    });
+    if (!category) {
+      throw new NotFoundException('Category not found.');
+    }
+    const product = this.products.create({
+      shopId: shop.id,
+      categoryId: dto.categoryId,
+      title: dto.title,
+      price: dto.price.toFixed(2),
+      stock: dto.stock,
+      condition: dto.condition,
+    });
+    return this.products.save(product);
+  }
+
+  findAll() {
+    return this.products.find({
+      where: { status: ProductStatus.ACTIVE },
+      relations: { shop: true, category: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: number) {
+    const product = await this.products.findOne({
+      where: { id },
+      relations: { shop: true, category: true },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found.');
+    }
+    return product;
+  }
+
+  async update(sellerId: number, id: number, dto: UpdateProductDto) {
+    const product = await this.findOwned(sellerId, id);
+    if (dto.categoryId !== undefined) {
+      const category = await this.categories.findOne({
+        where: { id: dto.categoryId },
+      });
+      if (!category) {
+        throw new NotFoundException('Category not found.');
+      }
+      product.categoryId = dto.categoryId;
+    }
+    if (dto.title !== undefined) {
+      product.title = dto.title;
+    }
+    if (dto.price !== undefined) {
+      product.price = dto.price.toFixed(2);
+    }
+    if (dto.stock !== undefined) {
+      product.stock = dto.stock;
+    }
+    if (dto.condition !== undefined) {
+      product.condition = dto.condition;
+    }
+    return this.products.save(product);
+  }
+
+  async remove(sellerId: number, id: number) {
+    const product = await this.findOwned(sellerId, id);
+    await this.products.remove(product);
+    return { deleted: true };
+  }
+
+  private async findOwned(sellerId: number, id: number) {
+    const product = await this.products.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found.');
+    }
+    const shop = await this.shops.findOne({ where: { sellerId } });
+    if (!shop || product.shopId !== shop.id) {
+      throw new ForbiddenException('This product is not yours.');
+    }
+    return product;
+  }
+}
