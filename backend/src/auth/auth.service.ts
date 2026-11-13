@@ -42,6 +42,7 @@ export class AuthService {
       passwordHash,
     });
 
+    await this.mail.sendWelcomeEmail(user.email, user.name);
     return this.buildResponse(user);
   }
 

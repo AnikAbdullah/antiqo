@@ -46,4 +46,12 @@ export class MailService {
       `Use this token to reset your password: ${token}`,
     );
   }
+
+  sendWelcomeEmail(to: string, name: string) {
+    return this.send(
+      to,
+      'Welcome to Antiqo',
+      `Hi ${name}, your Antiqo account is ready. Happy hunting for vintage finds.`,
+    );
+  }
 }
