@@ -17,6 +17,8 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orders: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItems: Repository<OrderItem>,
     @InjectRepository(CartItem)
     private readonly cartItems: Repository<CartItem>,
     private readonly dataSource: DataSource,
@@ -84,5 +86,28 @@ export class OrdersService {
     } finally {
       await runner.release();
     }
+  }
+
+  listForBuyer(buyerId: number) {
+    return this.orders.find({
+      where: { buyerId },
+      relations: { shop: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getForBuyer(buyerId: number, id: number) {
+    const order = await this.orders.findOne({
+      where: { id, buyerId },
+      relations: { shop: true },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found.');
+    }
+    const items = await this.orderItems.find({
+      where: { orderId: order.id },
+      relations: { product: true },
+    });
+    return { ...order, items };
   }
 }

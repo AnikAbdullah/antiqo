@@ -1,4 +1,12 @@
-import { Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
@@ -14,5 +22,20 @@ export class OrdersController {
   @Post('checkout')
   checkout(@CurrentUser() current: AuthUser) {
     return this.ordersService.checkout(current.userId);
+  }
+
+  @Roles(UserRole.BUYER)
+  @Get()
+  list(@CurrentUser() current: AuthUser) {
+    return this.ordersService.listForBuyer(current.userId);
+  }
+
+  @Roles(UserRole.BUYER)
+  @Get(':id')
+  getOne(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.getForBuyer(current.userId, id);
   }
 }
