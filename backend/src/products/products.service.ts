@@ -5,11 +5,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  FindOptionsWhere,
+  ILike,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { ProductStatus } from '../common/enums/product-status.enum';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { Shop } from '../shops/entities/shop.entity';
 import { Product } from './entities/product.entity';
+import { ProductImage } from './entities/product-image.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -22,6 +31,8 @@ export class ProductsService {
     private readonly shops: Repository<Shop>,
     @InjectRepository(Category)
     private readonly categories: Repository<Category>,
+    @InjectRepository(ProductImage)
+    private readonly productImages: Repository<ProductImage>,
   ) {}
 
   async create(sellerId: number, dto: CreateProductDto) {
@@ -46,12 +57,43 @@ export class ProductsService {
     return this.products.save(product);
   }
 
-  findAll() {
-    return this.products.find({
-      where: { status: ProductStatus.ACTIVE },
+  async findAll(filters: {
+    search?: string;
+    categoryId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResult<Product>> {
+    const where: FindOptionsWhere<Product> = {
+      status: ProductStatus.ACTIVE,
+    };
+    if (filters.search) {
+      where.title = ILike(`%${filters.search}%`);
+    }
+    if (filters.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+    const { minPrice, maxPrice } = filters;
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      where.price = Between(minPrice.toFixed(2), maxPrice.toFixed(2));
+    } else if (minPrice !== undefined) {
+      where.price = MoreThanOrEqual(minPrice.toFixed(2));
+    } else if (maxPrice !== undefined) {
+      where.price = LessThanOrEqual(maxPrice.toFixed(2));
+    }
+
+    const page = filters.page && filters.page > 0 ? filters.page : 1;
+    const limit = Math.min(filters.limit && filters.limit > 0 ? filters.limit : 12, 50);
+
+    const [items, total] = await this.products.findAndCount({
+      where,
       relations: { shop: true, category: true },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { items, total, page, limit };
   }
 
   async findOne(id: number) {
@@ -95,6 +137,22 @@ export class ProductsService {
     const product = await this.findOwned(sellerId, id);
     await this.products.remove(product);
     return { deleted: true };
+  }
+
+  async addImage(
+    sellerId: number,
+    productId: number,
+    file: { path: string } | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No image uploaded.');
+    }
+    const product = await this.findOwned(sellerId, productId);
+    const image = this.productImages.create({
+      productId: product.id,
+      path: file.path,
+    });
+    return this.productImages.save(image);
   }
 
   private async findOwned(sellerId: number, id: number) {
