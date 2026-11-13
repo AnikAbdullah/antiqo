@@ -45,6 +45,30 @@ export class OffersService {
       throw new BadRequestException('Only a pending offer can be accepted.');
     }
     offer.status = OfferStatus.ACCEPTED;
+    offer.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 48);
+    return this.offers.save(offer);
+  }
+
+  async use(buyerId: number, id: number) {
+    const offer = await this.offers.findOne({ where: { id } });
+    if (!offer) {
+      throw new NotFoundException('Offer not found.');
+    }
+    if (offer.buyerId !== buyerId) {
+      throw new ForbiddenException('This offer is not yours.');
+    }
+    if (offer.status === OfferStatus.USED) {
+      throw new BadRequestException('This offer has already been used.');
+    }
+    if (offer.status !== OfferStatus.ACCEPTED) {
+      throw new BadRequestException('Only an accepted offer can be used.');
+    }
+    if (offer.expiresAt && offer.expiresAt.getTime() < Date.now()) {
+      offer.status = OfferStatus.EXPIRED;
+      await this.offers.save(offer);
+      throw new BadRequestException('This offer has expired.');
+    }
+    offer.status = OfferStatus.USED;
     return this.offers.save(offer);
   }
 

@@ -39,6 +39,9 @@ export class Offer {
   @Column({ type: 'enum', enum: OfferStatus, default: OfferStatus.PENDING })
   status: OfferStatus;
 
+  @Column({ type: 'timestamp', nullable: true })
+  expiresAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
