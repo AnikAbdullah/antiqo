@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { MailService } from '../mail/mail.service';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
@@ -25,6 +26,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(PasswordResetToken)
     private readonly resetTokens: Repository<PasswordResetToken>,
+    private readonly mail: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -70,6 +72,7 @@ export class AuthService {
       usedAt: null,
     });
     const saved = await this.resetTokens.save(token);
+    await this.mail.sendPasswordResetEmail(user.email, saved.token);
     return { token: saved.token, expiresAt: saved.expiresAt };
   }
 
