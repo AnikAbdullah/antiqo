@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -37,5 +38,50 @@ export class OrdersController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.ordersService.getForBuyer(current.userId, id);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id/confirm')
+  confirm(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.confirmOrder(current.userId, id);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id/reject')
+  reject(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.rejectOrder(current.userId, id);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id/ship')
+  ship(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.markShipped(current.userId, id);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id/deliver')
+  deliver(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.markDelivered(current.userId, id);
+  }
+
+  @Roles(UserRole.SELLER)
+  @Patch(':id/record-cod')
+  recordCod(
+    @CurrentUser() current: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.recordCod(current.userId, id);
   }
 }
