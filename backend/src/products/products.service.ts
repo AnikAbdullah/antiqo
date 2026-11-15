@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -9,12 +10,15 @@ import {
   Between,
   FindOptionsWhere,
   ILike,
+  In,
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
 } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
+import { OrderStatus } from '../common/enums/order-status.enum';
 import { ProductStatus } from '../common/enums/product-status.enum';
+import { OrderItem } from '../orders/entities/order-item.entity';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { Shop } from '../shops/entities/shop.entity';
 import { Product } from './entities/product.entity';
@@ -33,6 +37,8 @@ export class ProductsService {
     private readonly categories: Repository<Category>,
     @InjectRepository(ProductImage)
     private readonly productImages: Repository<ProductImage>,
+    @InjectRepository(OrderItem)
+    private readonly orderItems: Repository<OrderItem>,
   ) {}
 
   async create(sellerId: number, dto: CreateProductDto) {
@@ -135,6 +141,24 @@ export class ProductsService {
 
   async remove(sellerId: number, id: number) {
     const product = await this.findOwned(sellerId, id);
+    const liveOrderItem = await this.orderItems.findOne({
+      where: {
+        productId: id,
+        order: {
+          status: In([
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.SHIPPED,
+          ]),
+        },
+      },
+      relations: { order: true },
+    });
+    if (liveOrderItem) {
+      throw new ConflictException(
+        'Cannot delete a product that is part of active orders.',
+      );
+    }
     await this.products.remove(product);
     return { deleted: true };
   }
@@ -153,6 +177,23 @@ export class ProductsService {
       path: file.path,
     });
     return this.productImages.save(image);
+  }
+
+  async setStatus(id: number, status: ProductStatus) {
+    const product = await this.products.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found.');
+    }
+    product.status = status;
+    return this.products.save(product);
+  }
+
+  hide(id: number) {
+    return this.setStatus(id, ProductStatus.HIDDEN);
+  }
+
+  restore(id: number) {
+    return this.setStatus(id, ProductStatus.ACTIVE);
   }
 
   private async findOwned(sellerId: number, id: number) {

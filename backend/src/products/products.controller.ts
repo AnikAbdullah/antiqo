@@ -100,6 +100,18 @@ export class ProductsController {
     return this.productsService.remove(current.userId, id);
   }
 
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/hide')
+  hide(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.hide(id);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/restore')
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.restore(id);
+  }
+
   @Roles(UserRole.SELLER)
   @Post(':id/images')
   @UseInterceptors(FileInterceptor('image', imageUpload))
