@@ -18,6 +18,7 @@ import { SettingsModule } from './settings/settings.module';
 import { ShopsModule } from './shops/shops.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { EnvelopeInterceptor } from './common/interceptors/envelope.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { validateEnv } from './config/env.validation';
@@ -55,6 +56,7 @@ import { UsersModule } from './users/users.module';
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_INTERCEPTOR, useClass: EnvelopeInterceptor },
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
