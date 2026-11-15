@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import * as argon2 from 'argon2';
 import { ApprovalStatus } from '../common/enums/approval-status.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
+import { ProductCondition } from '../common/enums/product-condition.enum';
 import { UserRole } from '../common/enums/user-role.enum';
 import { Category } from '../categories/entities/category.entity';
 import { OrderItem } from '../orders/entities/order-item.entity';
@@ -75,7 +76,7 @@ async function seed() {
       title: 'Teak Lounge Chair',
       price: '4500.00',
       stock: 5,
-      condition: 'used',
+      condition: ProductCondition.USED,
     }),
   );
   const lamp = await products.save(
@@ -85,7 +86,7 @@ async function seed() {
       title: 'Brass Floor Lamp',
       price: '2200.00',
       stock: 3,
-      condition: 'like new',
+      condition: ProductCondition.LIKE_NEW,
     }),
   );
 

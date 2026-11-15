@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
+import { ProductCondition } from '../../common/enums/product-condition.enum';
 import { ProductStatus } from '../../common/enums/product-status.enum';
 import { Shop } from '../../shops/entities/shop.entity';
 
@@ -39,8 +40,8 @@ export class Product {
   @Column({ type: 'int', default: 0 })
   stock: number;
 
-  @Column()
-  condition: string;
+  @Column({ type: 'enum', enum: ProductCondition })
+  condition: ProductCondition;
 
   @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.ACTIVE })
   status: ProductStatus;
