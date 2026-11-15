@@ -1,4 +1,5 @@
 import {
+  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
@@ -7,6 +8,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { ProductCondition } from '../../common/enums/product-condition.enum';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -31,8 +33,6 @@ export class UpdateProductDto {
   stock?: number;
 
   @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(40)
-  condition?: string;
+  @IsEnum(ProductCondition)
+  condition?: ProductCondition;
 }

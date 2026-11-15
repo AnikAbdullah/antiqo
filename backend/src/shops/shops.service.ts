@@ -6,7 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApprovalStatus } from '../common/enums/approval-status.enum';
+import { ProductStatus } from '../common/enums/product-status.enum';
 import { UserRole } from '../common/enums/user-role.enum';
+import { Product } from '../products/entities/product.entity';
 import { User } from '../users/entities/user.entity';
 import { Shop } from './entities/shop.entity';
 import { CreateShopDto } from './dto/create-shop.dto';
@@ -18,6 +20,8 @@ export class ShopsService {
     private readonly shops: Repository<Shop>,
     @InjectRepository(User)
     private readonly users: Repository<User>,
+    @InjectRepository(Product)
+    private readonly products: Repository<Product>,
   ) {}
 
   async apply(sellerId: number, dto: CreateShopDto) {
@@ -60,5 +64,17 @@ export class ShopsService {
     }
     shop.approvalStatus = ApprovalStatus.REJECTED;
     return this.shops.save(shop);
+  }
+
+  async getPublicShop(id: number) {
+    const shop = await this.shops.findOne({ where: { id } });
+    if (!shop || shop.approvalStatus !== ApprovalStatus.APPROVED) {
+      throw new NotFoundException('Shop not found.');
+    }
+    const products = await this.products.find({
+      where: { shopId: shop.id, status: ProductStatus.ACTIVE },
+      order: { createdAt: 'DESC' },
+    });
+    return { shop, products };
   }
 }

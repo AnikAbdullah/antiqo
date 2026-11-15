@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import type { AuthUser } from '../common/interfaces/authenticated-request.interface';
@@ -38,5 +39,11 @@ export class ShopsController {
   @Patch(':id/reject')
   reject(@Param('id', ParseIntPipe) id: number) {
     return this.shopsService.reject(id);
+  }
+
+  @Public()
+  @Get(':id')
+  getPublicShop(@Param('id', ParseIntPipe) id: number) {
+    return this.shopsService.getPublicShop(id);
   }
 }
