@@ -51,4 +51,13 @@ export class ReviewsService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async moderate(id: number) {
+    const review = await this.reviews.findOne({ where: { id } });
+    if (!review) {
+      throw new NotFoundException('Review not found.');
+    }
+    review.visible = false;
+    return this.reviews.save(review);
+  }
 }

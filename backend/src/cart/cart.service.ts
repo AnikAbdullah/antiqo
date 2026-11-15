@@ -1,0 +1,85 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ProductStatus } from '../common/enums/product-status.enum';
+import { Product } from '../products/entities/product.entity';
+import { CartItem } from './entities/cart-item.entity';
+import { AddCartItemDto } from './dto/add-cart-item.dto';
+
+@Injectable()
+export class CartService {
+  constructor(
+    @InjectRepository(CartItem)
+    private readonly cartItems: Repository<CartItem>,
+    @InjectRepository(Product)
+    private readonly products: Repository<Product>,
+  ) {}
+
+  async add(buyerId: number, dto: AddCartItemDto) {
+    const product = await this.products.findOne({
+      where: { id: dto.productId },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found.');
+    }
+    if (product.status !== ProductStatus.ACTIVE) {
+      throw new BadRequestException('This product is not available.');
+    }
+    const anyItem = await this.cartItems.findOne({
+      where: { buyerId },
+      relations: { product: true },
+    });
+    if (anyItem && anyItem.product.shopId !== product.shopId) {
+      throw new BadRequestException(
+        'Your cart can only hold items from one shop. Clear it first.',
+      );
+    }
+    const existing = await this.cartItems.findOne({
+      where: { buyerId, productId: dto.productId },
+    });
+    if (existing) {
+      existing.quantity += dto.quantity;
+      return this.cartItems.save(existing);
+    }
+    const item = this.cartItems.create({
+      buyerId,
+      productId: dto.productId,
+      quantity: dto.quantity,
+    });
+    return this.cartItems.save(item);
+  }
+
+  viewCart(buyerId: number) {
+    return this.cartItems.find({
+      where: { buyerId },
+      relations: { product: true },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async removeItem(buyerId: number, productId: number) {
+    const item = await this.cartItems.findOne({
+      where: { buyerId, productId },
+    });
+    if (!item) {
+      throw new NotFoundException('This product is not in your cart.');
+    }
+    await this.cartItems.remove(item);
+    return { removed: true };
+  }
+
+  async changeQuantity(buyerId: number, productId: number, quantity: number) {
+    const item = await this.cartItems.findOne({
+      where: { buyerId, productId },
+    });
+    if (!item) {
+      throw new NotFoundException('This product is not in your cart.');
+    }
+    item.quantity = quantity;
+    return this.cartItems.save(item);
+  }
+}
