@@ -11,6 +11,8 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { ReturnStatus } from '../common/enums/return-status.enum';
 import { Order } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order-item.entity';
+import { Product } from '../products/entities/product.entity';
 import { Return } from './entities/return.entity';
 import { CreateReturnDto } from './dto/create-return.dto';
 import { InspectReturnDto } from './dto/inspect-return.dto';
@@ -23,6 +25,10 @@ export class ReturnsService {
     private readonly returns: Repository<Return>,
     @InjectRepository(Order)
     private readonly orders: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItems: Repository<OrderItem>,
+    @InjectRepository(Product)
+    private readonly products: Repository<Product>,
   ) {}
 
   findAll() {
@@ -83,6 +89,21 @@ export class ReturnsService {
     if (order.paymentStatus !== PaymentStatus.COD_COLLECTED) {
       throw new BadRequestException('Refund requires COD to be collected first.');
     }
+    if (record.resaleFit) {
+      const items = await this.orderItems.find({
+        where: { orderId: order.id },
+      });
+      for (const item of items) {
+        const product = await this.products.findOne({
+          where: { id: item.productId },
+        });
+        if (product) {
+          product.stock += item.quantity;
+          await this.products.save(product);
+        }
+      }
+    }
+
     record.refundAmount = dto.amount.toFixed(2);
     record.status = ReturnStatus.REFUNDED;
     order.paymentStatus = PaymentStatus.REFUNDED;
