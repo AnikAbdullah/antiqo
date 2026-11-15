@@ -62,4 +62,12 @@ export class MailService {
       `Thanks for shopping with Antiqo. Order #${orderId} is placed, total ${total}. We will email you as it moves along.`,
     );
   }
+
+  sendReturnUpdate(to: string, returnId: number, status: string) {
+    return this.send(
+      to,
+      `Your Antiqo return #${returnId}`,
+      `There is an update on your return #${returnId}: it is now ${status}.`,
+    );
+  }
 }

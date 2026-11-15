@@ -10,9 +10,11 @@ import { Repository } from 'typeorm';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { ReturnStatus } from '../common/enums/return-status.enum';
+import { MailService } from '../mail/mail.service';
 import { Order } from '../orders/entities/order.entity';
 import { OrderItem } from '../orders/entities/order-item.entity';
 import { Product } from '../products/entities/product.entity';
+import { User } from '../users/entities/user.entity';
 import { Return } from './entities/return.entity';
 import { CreateReturnDto } from './dto/create-return.dto';
 import { InspectReturnDto } from './dto/inspect-return.dto';
@@ -29,6 +31,9 @@ export class ReturnsService {
     private readonly orderItems: Repository<OrderItem>,
     @InjectRepository(Product)
     private readonly products: Repository<Product>,
+    @InjectRepository(User)
+    private readonly users: Repository<User>,
+    private readonly mail: MailService,
   ) {}
 
   findAll() {
@@ -71,7 +76,9 @@ export class ReturnsService {
     }
     record.status = ReturnStatus.INSPECTED;
     record.resaleFit = dto.resaleFit;
-    return this.returns.save(record);
+    const saved = await this.returns.save(record);
+    await this.notifyBuyer(saved.orderId, saved.id, saved.status);
+    return saved;
   }
 
   async recordRefund(id: number, dto: RecordRefundDto) {
@@ -108,6 +115,19 @@ export class ReturnsService {
     record.status = ReturnStatus.REFUNDED;
     order.paymentStatus = PaymentStatus.REFUNDED;
     await this.orders.save(order);
-    return this.returns.save(record);
+    const saved = await this.returns.save(record);
+    await this.notifyBuyer(saved.orderId, saved.id, saved.status);
+    return saved;
+  }
+
+  private async notifyBuyer(orderId: number, returnId: number, status: string) {
+    const order = await this.orders.findOne({ where: { id: orderId } });
+    if (!order) {
+      return;
+    }
+    const buyer = await this.users.findOne({ where: { id: order.buyerId } });
+    if (buyer) {
+      await this.mail.sendReturnUpdate(buyer.email, returnId, status);
+    }
   }
 }
