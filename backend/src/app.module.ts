@@ -14,6 +14,7 @@ import { ProductsModule } from './products/products.module';
 import { ReportsModule } from './reports/reports.module';
 import { ReturnsModule } from './returns/returns.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { SettingsModule } from './settings/settings.module';
 import { ShopsModule } from './shops/shops.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
@@ -47,6 +48,7 @@ import { UsersModule } from './users/users.module';
     ReviewsModule,
     ReportsModule,
     ReturnsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [

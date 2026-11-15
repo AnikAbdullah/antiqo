@@ -5,13 +5,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { MailService } from '../mail/mail.service';
+import { SettingsService } from '../settings/settings.service';
 import { Product } from '../products/entities/product.entity';
 import { Shop } from '../shops/entities/shop.entity';
 import { User } from '../users/entities/user.entity';
@@ -32,8 +32,8 @@ export class OrdersService {
     @InjectRepository(User)
     private readonly users: Repository<User>,
     private readonly dataSource: DataSource,
-    private readonly config: ConfigService,
     private readonly mail: MailService,
+    private readonly settings: SettingsService,
   ) {}
 
   async checkout(buyerId: number) {
@@ -45,6 +45,7 @@ export class OrdersService {
       throw new BadRequestException('Your cart is empty.');
     }
     const shopId = cart[0].product.shopId;
+    const deliveryFee = await this.settings.getDeliveryFee();
 
     let placed: Order & { items: OrderItem[] };
     const runner = this.dataSource.createQueryRunner();
@@ -85,7 +86,6 @@ export class OrdersService {
         items.push(item);
       }
 
-      const deliveryFee = Number(this.config.get<string>('DELIVERY_FEE') ?? '0');
       order.total = (total + deliveryFee).toFixed(2);
       await runner.manager.save(order);
       await runner.manager.remove(cart);
