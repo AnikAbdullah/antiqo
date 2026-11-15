@@ -14,6 +14,7 @@ import type { AuthUser } from '../common/interfaces/authenticated-request.interf
 import { ReturnsService } from './returns.service';
 import { CreateReturnDto } from './dto/create-return.dto';
 import { InspectReturnDto } from './dto/inspect-return.dto';
+import { RecordRefundDto } from './dto/record-refund.dto';
 
 @Controller('returns')
 export class ReturnsController {
@@ -38,5 +39,14 @@ export class ReturnsController {
     @Body() dto: InspectReturnDto,
   ) {
     return this.returnsService.inspect(id, dto);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/refund')
+  refund(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RecordRefundDto,
+  ) {
+    return this.returnsService.recordRefund(id, dto);
   }
 }
