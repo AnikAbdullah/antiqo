@@ -155,6 +155,23 @@ export class ProductsService {
     return this.productImages.save(image);
   }
 
+  async setStatus(id: number, status: ProductStatus) {
+    const product = await this.products.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found.');
+    }
+    product.status = status;
+    return this.products.save(product);
+  }
+
+  hide(id: number) {
+    return this.setStatus(id, ProductStatus.HIDDEN);
+  }
+
+  restore(id: number) {
+    return this.setStatus(id, ProductStatus.ACTIVE);
+  }
+
   private async findOwned(sellerId: number, id: number) {
     const product = await this.products.findOne({ where: { id } });
     if (!product) {
