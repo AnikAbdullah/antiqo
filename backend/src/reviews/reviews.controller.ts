@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   ParseIntPipe,
@@ -28,5 +30,11 @@ export class ReviewsController {
   @Get()
   listByShop(@Query('shopId', ParseIntPipe) shopId: number) {
     return this.reviewsService.listByShop(shopId);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/moderate')
+  moderate(@Param('id', ParseIntPipe) id: number) {
+    return this.reviewsService.moderate(id);
   }
 }
