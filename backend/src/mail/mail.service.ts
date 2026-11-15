@@ -54,4 +54,12 @@ export class MailService {
       `Hi ${name}, your Antiqo account is ready. Happy hunting for vintage finds.`,
     );
   }
+
+  sendOrderConfirmation(to: string, orderId: number, total: string) {
+    return this.send(
+      to,
+      `Your Antiqo order #${orderId}`,
+      `Thanks for shopping with Antiqo. Order #${orderId} is placed, total ${total}. We will email you as it moves along.`,
+    );
+  }
 }

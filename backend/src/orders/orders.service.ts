@@ -11,8 +11,10 @@ import { DataSource, Repository } from 'typeorm';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaymentStatus } from '../common/enums/payment-status.enum';
+import { MailService } from '../mail/mail.service';
 import { Product } from '../products/entities/product.entity';
 import { Shop } from '../shops/entities/shop.entity';
+import { User } from '../users/entities/user.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Order } from './entities/order.entity';
 
@@ -27,8 +29,11 @@ export class OrdersService {
     private readonly cartItems: Repository<CartItem>,
     @InjectRepository(Shop)
     private readonly shops: Repository<Shop>,
+    @InjectRepository(User)
+    private readonly users: Repository<User>,
     private readonly dataSource: DataSource,
     private readonly config: ConfigService,
+    private readonly mail: MailService,
   ) {}
 
   async checkout(buyerId: number) {
@@ -41,6 +46,7 @@ export class OrdersService {
     }
     const shopId = cart[0].product.shopId;
 
+    let placed: Order & { items: OrderItem[] };
     const runner = this.dataSource.createQueryRunner();
     await runner.connect();
     await runner.startTransaction();
@@ -85,13 +91,23 @@ export class OrdersService {
       await runner.manager.remove(cart);
 
       await runner.commitTransaction();
-      return { ...order, items };
+      placed = { ...order, items };
     } catch (error) {
       await runner.rollbackTransaction();
       throw error;
     } finally {
       await runner.release();
     }
+
+    const buyer = await this.users.findOne({ where: { id: buyerId } });
+    if (buyer) {
+      await this.mail.sendOrderConfirmation(
+        buyer.email,
+        placed.id,
+        placed.total,
+      );
+    }
+    return placed;
   }
 
   listForBuyer(buyerId: number) {
