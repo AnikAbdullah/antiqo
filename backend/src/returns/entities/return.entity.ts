@@ -25,6 +25,9 @@ export class Return {
   @Column({ type: 'enum', enum: ReturnStatus, default: ReturnStatus.REQUESTED })
   status: ReturnStatus;
 
+  @Column({ type: 'boolean', nullable: true })
+  resaleFit: boolean | null;
+
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   refundAmount: string | null;
 

@@ -8,9 +8,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderStatus } from '../common/enums/order-status.enum';
+import { ReturnStatus } from '../common/enums/return-status.enum';
 import { Order } from '../orders/entities/order.entity';
 import { Return } from './entities/return.entity';
 import { CreateReturnDto } from './dto/create-return.dto';
+import { InspectReturnDto } from './dto/inspect-return.dto';
 
 @Injectable()
 export class ReturnsService {
@@ -49,5 +51,18 @@ export class ReturnsService {
     }
     const request = this.returns.create({ orderId: dto.orderId });
     return this.returns.save(request);
+  }
+
+  async inspect(id: number, dto: InspectReturnDto) {
+    const record = await this.returns.findOne({ where: { id } });
+    if (!record) {
+      throw new NotFoundException('Return not found.');
+    }
+    if (record.status !== ReturnStatus.REQUESTED) {
+      throw new BadRequestException('Only a requested return can be inspected.');
+    }
+    record.status = ReturnStatus.INSPECTED;
+    record.resaleFit = dto.resaleFit;
+    return this.returns.save(record);
   }
 }
