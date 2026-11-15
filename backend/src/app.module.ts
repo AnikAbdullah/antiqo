@@ -14,9 +14,11 @@ import { ProductsModule } from './products/products.module';
 import { ReportsModule } from './reports/reports.module';
 import { ReturnsModule } from './returns/returns.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { SettingsModule } from './settings/settings.module';
 import { ShopsModule } from './shops/shops.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { EnvelopeInterceptor } from './common/interceptors/envelope.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { validateEnv } from './config/env.validation';
@@ -47,12 +49,14 @@ import { UsersModule } from './users/users.module';
     ReviewsModule,
     ReportsModule,
     ReturnsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_INTERCEPTOR, useClass: EnvelopeInterceptor },
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
