@@ -1,5 +1,15 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../common/enums/user-role.enum';
 import type { AuthUser } from '../common/interfaces/authenticated-request.interface';
 import { ShopsService } from './shops.service';
 import { CreateShopDto } from './dto/create-shop.dto';
@@ -16,5 +26,17 @@ export class ShopsController {
   @Get('me')
   getOwn(@CurrentUser() current: AuthUser) {
     return this.shopsService.getOwn(current.userId);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/approve')
+  approve(@Param('id', ParseIntPipe) id: number) {
+    return this.shopsService.approve(id);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/reject')
+  reject(@Param('id', ParseIntPipe) id: number) {
+    return this.shopsService.reject(id);
   }
 }
