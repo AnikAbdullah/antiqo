@@ -90,7 +90,7 @@ export class UsersService {
     });
     const saved = await this.verificationTokens.save(token);
     await this.mail.sendVerificationEmail(user.email, saved.token);
-    return { token: saved.token, expiresAt: saved.expiresAt };
+    return { message: 'A verification link has been sent to your email.' };
   }
 
   async verifyEmail(rawToken: string) {
