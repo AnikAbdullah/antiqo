@@ -7,12 +7,16 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly transporter: Transporter | null;
   private readonly from: string;
+  private readonly appUrl: string;
 
   constructor(private readonly config: ConfigService) {
     const user = this.config.get<string>('MAIL_USER') || '';
     const pass = this.config.get<string>('MAIL_PASS') || '';
     this.from =
       this.config.get<string>('MAIL_FROM') || user || 'no-reply@antiqo.local';
+    this.appUrl = (
+      this.config.get<string>('APP_URL') || 'http://localhost:3000'
+    ).replace(/\/+$/, '');
 
     if (user && pass) {
       this.transporter = createTransport({
@@ -56,7 +60,9 @@ export class MailService {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#fffdf9;border:1px solid #e6dccb;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(58,47,38,0.06);">
             <tr>
               <td style="background-color:#5a4433;padding:28px 40px;text-align:center;">
-                <span style="font-size:26px;font-weight:bold;letter-spacing:4px;color:#f4efe7;text-transform:uppercase;">Antiqo</span>
+                <a href="${this.appUrl}" style="text-decoration:none;">
+                  <span style="font-size:26px;font-weight:bold;letter-spacing:4px;color:#f4efe7;text-transform:uppercase;">Antiqo</span>
+                </a>
                 <div style="margin-top:6px;font-size:12px;letter-spacing:2px;color:#c7a97e;font-style:italic;">curated vintage finds</div>
               </td>
             </tr>
@@ -68,6 +74,11 @@ export class MailService {
             </tr>
             <tr>
               <td style="padding:22px 40px;background-color:#faf6ef;border-top:1px solid #e6dccb;text-align:center;">
+                <div style="margin-bottom:10px;">
+                  <a href="${this.appUrl}" style="color:#5a4433;text-decoration:none;font-size:13px;margin:0 10px;">Browse the marketplace</a>
+                  <span style="color:#c7a97e;">&middot;</span>
+                  <a href="${this.appUrl}/api/docs" style="color:#5a4433;text-decoration:none;font-size:13px;margin:0 10px;">Help &amp; API</a>
+                </div>
                 <div style="font-size:12px;color:#9a8b78;line-height:1.6;">
                   You are receiving this because an action was taken on your Antiqo account.<br />
                   &copy; ${new Date().getFullYear()} Antiqo &middot; A marketplace for vintage treasures
@@ -86,11 +97,25 @@ export class MailService {
     return `<p style="margin:0 0 16px 0;font-size:16px;line-height:1.65;color:#3a2f26;">${text}</p>`;
   }
 
+  private button(label: string, href: string): string {
+    return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto;">
+      <tr>
+        <td style="border-radius:8px;background-color:#5a4433;box-shadow:0 2px 5px rgba(58,47,38,0.18);">
+          <a href="${href}" style="display:inline-block;padding:14px 34px;font-family:Georgia,'Times New Roman',serif;font-size:15px;font-weight:bold;letter-spacing:0.5px;color:#f4efe7;text-decoration:none;">${label}</a>
+        </td>
+      </tr>
+    </table>`;
+  }
+
   private tokenBox(label: string, token: string): string {
-    return `<div style="margin:24px 0;padding:18px 20px;background-color:#f4efe7;border:1px dashed #c7a97e;border-radius:10px;text-align:center;">
-      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#9a8b78;margin-bottom:10px;">${label}</div>
-      <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:bold;letter-spacing:1px;color:#5a4433;word-break:break-all;">${token}</div>
+    return `<div style="margin:20px 0;padding:16px 20px;background-color:#f4efe7;border:1px dashed #c7a97e;border-radius:10px;text-align:center;">
+      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#9a8b78;margin-bottom:8px;">${label}</div>
+      <div style="font-family:'Courier New',monospace;font-size:16px;font-weight:bold;letter-spacing:1px;color:#5a4433;word-break:break-all;">${token}</div>
     </div>`;
+  }
+
+  private fallbackLink(href: string): string {
+    return `<p style="margin:4px 0 0 0;font-size:13px;line-height:1.6;color:#9a8b78;">If the button does not work, copy and paste this link into your browser:<br /><a href="${href}" style="color:#5a4433;word-break:break-all;">${href}</a></p>`;
   }
 
   private detailRow(label: string, value: string): string {
@@ -105,10 +130,13 @@ export class MailService {
   }
 
   sendVerificationEmail(to: string, token: string) {
+    const link = `${this.appUrl}/verify-email?token=${encodeURIComponent(token)}`;
     const inner =
       this.paragraph('Welcome to Antiqo! One quick step to confirm it is you.') +
-      this.paragraph('Use the verification token below to activate your email address. It stays valid for 24 hours.') +
-      this.tokenBox('Verification token', token) +
+      this.paragraph('Tap the button below to verify your email address. This link stays valid for 24 hours.') +
+      this.button('Verify my email', link) +
+      this.tokenBox('Or use this verification token', token) +
+      this.fallbackLink(link) +
       this.paragraph('If you did not create an Antiqo account, you can safely ignore this message.');
     return this.send(
       to,
@@ -118,10 +146,13 @@ export class MailService {
   }
 
   sendPasswordResetEmail(to: string, token: string) {
+    const link = `${this.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
     const inner =
       this.paragraph('We received a request to reset the password on your Antiqo account.') +
-      this.paragraph('Use the token below to set a new password. For your security, it expires in 1 hour.') +
-      this.tokenBox('Password reset token', token) +
+      this.paragraph('Tap the button below to choose a new password. For your security, this link expires in 1 hour.') +
+      this.button('Reset my password', link) +
+      this.tokenBox('Or use this reset token', token) +
+      this.fallbackLink(link) +
       this.paragraph('Did not request this? No action is needed — your password stays the same.');
     return this.send(
       to,
@@ -134,6 +165,7 @@ export class MailService {
     const inner =
       this.paragraph(`Hi ${name},`) +
       this.paragraph('Your Antiqo account is ready. Explore a curated marketplace of vintage pieces, place offers, and track every order from checkout to doorstep.') +
+      this.button('Start exploring', this.appUrl) +
       this.paragraph('Happy hunting for timeless finds.');
     return this.send(
       to,
@@ -143,6 +175,7 @@ export class MailService {
   }
 
   sendOrderConfirmation(to: string, orderId: number, total: string) {
+    const link = `${this.appUrl}/orders/${orderId}`;
     const inner =
       this.paragraph('Thanks for shopping with Antiqo — your order is confirmed.') +
       this.detailTable(
@@ -150,6 +183,7 @@ export class MailService {
           this.detailRow('Order total', total) +
           this.detailRow('Status', 'Placed'),
       ) +
+      this.button('View your order', link) +
       this.paragraph('We will email you with each update as your order moves along.');
     return this.send(
       to,
@@ -159,12 +193,14 @@ export class MailService {
   }
 
   sendReturnUpdate(to: string, returnId: number, status: string) {
+    const link = `${this.appUrl}/returns/${returnId}`;
     const inner =
       this.paragraph('There is an update on your Antiqo return request.') +
       this.detailTable(
         this.detailRow('Return number', `#${returnId}`) +
           this.detailRow('Current status', status),
       ) +
+      this.button('View return details', link) +
       this.paragraph('We will keep you posted as the return progresses.');
     return this.send(
       to,
