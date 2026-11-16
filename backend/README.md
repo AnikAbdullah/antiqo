@@ -92,6 +92,8 @@ Every response uses a consistent envelope:
 
 Paginated lists put the rows in `data` and `{ total, page, limit }` in `meta`. Errors return `{ "success": false, "statusCode": ..., "message": ... }`.
 
+A public **`GET /health`** endpoint returns `{ status, uptime, timestamp }` for uptime checks and needs no token.
+
 ## Roles
 
 - **buyer** — browse, cart, checkout, offers, wishlist, reviews, returns
