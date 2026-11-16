@@ -37,7 +37,11 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total: string;
 
-  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.COD_PENDING })
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.COD_PENDING,
+  })
   paymentStatus: PaymentStatus;
 
   @CreateDateColumn()

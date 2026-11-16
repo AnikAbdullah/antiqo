@@ -25,7 +25,11 @@ export class Shop {
   @Column()
   name: string;
 
-  @Column({ type: 'enum', enum: ApprovalStatus, default: ApprovalStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: ApprovalStatus,
+    default: ApprovalStatus.PENDING,
+  })
   approvalStatus: ApprovalStatus;
 
   @CreateDateColumn()

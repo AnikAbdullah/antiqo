@@ -23,8 +23,8 @@ export class AuditInterceptor implements NestInterceptor {
     }
 
     const actor = request.user ? `user ${request.user.userId}` : 'anonymous';
-    return next.handle().pipe(
-      tap(() => this.logger.log(`${method} ${originalUrl} by ${actor}`)),
-    );
+    return next
+      .handle()
+      .pipe(tap(() => this.logger.log(`${method} ${originalUrl} by ${actor}`)));
   }
 }

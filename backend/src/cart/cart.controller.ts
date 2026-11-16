@@ -39,7 +39,11 @@ export class CartController {
     @Param('productId', ParseIntPipe) productId: number,
     @Body() dto: UpdateCartItemDto,
   ) {
-    return this.cartService.changeQuantity(current.userId, productId, dto.quantity);
+    return this.cartService.changeQuantity(
+      current.userId,
+      productId,
+      dto.quantity,
+    );
   }
 
   @Roles(UserRole.BUYER)

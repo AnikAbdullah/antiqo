@@ -50,7 +50,12 @@ export class UsersService {
     return profile;
   }
 
-  createUser(data: { name: string; email: string; passwordHash: string; role?: UserRole }) {
+  createUser(data: {
+    name: string;
+    email: string;
+    passwordHash: string;
+    role?: UserRole;
+  }) {
     const user = this.users.create(data);
     return this.users.save(user);
   }
