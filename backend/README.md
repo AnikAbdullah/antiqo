@@ -1,98 +1,141 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Antiqo API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend for **Antiqo**, a multi-vendor marketplace for vintage products. REST API built with NestJS and PostgreSQL: JWT auth, role-based access, a transactional cash-on-delivery checkout, and Swagger docs.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Course: CSC4161 — Advanced Programming in Web Technology · Group 8, Section D.
 
-## Description
+## Tech stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **NestJS 11** + **TypeScript**
+- **PostgreSQL 18** via **TypeORM** (`synchronize` in dev)
+- **Argon2id** password hashing, **JWT** auth (`@nestjs/jwt` + Passport)
+- **class-validator** DTOs behind a global `ValidationPipe`
+- **Swagger** at `/api/docs` with bearer auth
+- **Nodemailer** (Mailtrap) for transactional email
 
-## Project setup
+## Prerequisites
+
+- Node.js 18+ and npm
+- PostgreSQL 18 running locally on port 5432
+
+## 1. Install
 
 ```bash
-$ npm install
+cd backend
+npm install
 ```
 
-## Compile and run the project
+## 2. Create the database
+
+```sql
+CREATE DATABASE antiqo;
+```
+
+(or `createdb antiqo`)
+
+## 3. Configure
+
+Copy the example env file and fill in the values:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
 ```
 
-## Run tests
+| Variable | Purpose |
+|---|---|
+| `NODE_ENV` | `development` enables TypeORM `synchronize` |
+| `PORT` | HTTP port (default 3000) |
+| `DATABASE_URL` | `postgres://user:pass@localhost:5432/antiqo` |
+| `JWT_SECRET` | secret used to sign JWTs |
+| `JWT_EXPIRES_IN` | token lifetime, e.g. `1h` |
+| `DELIVERY_FEE` | default delivery fee (admin can override at runtime) |
+| `MAIL_HOST` / `MAIL_PORT` / `MAIL_USER` / `MAIL_PASS` | Mailtrap SMTP (optional — email is best-effort) |
+
+Email is optional: if the mail variables are unset or invalid, the app logs a warning and keeps working.
+
+## 4. Run
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
 ```
 
-## Deployment
+The API listens on `http://localhost:3000`. Tables are created automatically in dev.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 5. Seed demo data
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run seed
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Creates demo accounts (password `Password123` for all), an approved shop, two products, and one delivered order:
 
-## Resources
+| Role | Email |
+|---|---|
+| Admin | `admin@antiqo.test` |
+| Seller | `seller@antiqo.test` |
+| Buyer | `buyer@antiqo.test` |
 
-Check out a few resources that may come in handy when working with NestJS:
+The seed is safe to re-run (it skips if the admin already exists).
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## API docs
 
-## Support
+Swagger UI: **http://localhost:3000/api/docs**
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. `POST /auth/login` with a seeded account to get a token.
+2. Click **Authorize**, paste the token, and call any protected endpoint.
 
-## Stay in touch
+Every response uses a consistent envelope:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```json
+{ "success": true, "message": "OK", "data": <payload>, "meta": null }
+```
 
-## License
+Paginated lists put the rows in `data` and `{ total, page, limit }` in `meta`. Errors return `{ "success": false, "statusCode": ..., "message": ... }`.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Roles
+
+- **buyer** — browse, cart, checkout, offers, wishlist, reviews, returns
+- **seller** — owns an approved shop; manages products and fulfils orders
+- **admin** — approves shops, moderates listings/reviews/reports, sets the delivery fee, inspects returns and records refunds
+
+A new account starts as a buyer; applying for a shop and being approved by an admin promotes it to seller.
+
+## Key flows
+
+- **Seller onboarding:** `POST /shops/apply` → admin `PATCH /shops/:id/approve` (promotes the owner to seller) → the seller can create products.
+- **Checkout (transactional):** `POST /orders/checkout` builds the order from the cart inside a `QueryRunner` transaction, locks each product row, decrements stock, and rolls the whole thing back with `409` if any item is short — no order, no stock change.
+- **Order lifecycle:** `confirm` → `ship` → `deliver` → `record-cod`.
+- **Returns:** buyer `POST /returns` on a delivered order → admin `inspect` → admin `refund` (requires COD collected + inspection); a resale-fit return restocks once.
+
+## Minimum requirements (how to verify)
+
+| Requirement | Try |
+|---|---|
+| CRUD | `GET /products`, `POST/PATCH/DELETE /products` (seller) |
+| Transaction + rollback | add more than stock to cart, `POST /orders/checkout` → `409`, stock unchanged |
+| JWT 401/403 | call a protected route with no token (401); call a seller/admin route as a buyer (403) |
+| DTO validation 400 | `POST /auth/register {}` → 400 |
+| Exceptions 404/409 | `GET /products/999999` → 404; apply for a second shop → 409 |
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm run start:dev` | run in watch mode |
+| `npm run build` | compile to `dist/` |
+| `npm run start:prod` | run the compiled build |
+| `npm run seed` | load demo data |
+| `npm run lint` | lint and autofix |
+
+## Project layout
+
+```
+src/
+  auth/ users/ addresses/        accounts & security
+  shops/ products/ categories/   catalogue
+  cart/ orders/ offers/          commerce
+  wishlists/ reviews/ reports/ returns/   trust & post-sale
+  mail/ settings/                admin & infrastructure
+  common/                        enums, guards, decorators, interceptors, filters
+  database/                      data source + seed
+```
