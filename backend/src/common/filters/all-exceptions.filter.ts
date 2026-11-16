@@ -24,11 +24,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const body = exception.getResponse();
-      message =
-        typeof body === 'string' ? body : ((body as any).message ?? message);
+      if (typeof body === 'string') {
+        message = body;
+      } else if (typeof body === 'object' && body !== null && 'message' in body) {
+        const bodyMessage = (body as { message?: string | string[] }).message;
+        if (bodyMessage !== undefined) {
+          message = bodyMessage;
+        }
+      }
     } else if (exception instanceof QueryFailedError) {
-      const pgError = exception as any;
-      if (pgError.code === '23505') {
+      const code = (exception.driverError as { code?: string }).code;
+      if (code === '23505') {
         status = HttpStatus.CONFLICT;
         message = 'That value is already taken.';
       }
