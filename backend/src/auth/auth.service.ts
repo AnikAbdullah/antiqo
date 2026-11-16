@@ -74,7 +74,7 @@ export class AuthService {
     });
     const saved = await this.resetTokens.save(token);
     await this.mail.sendPasswordResetEmail(user.email, saved.token);
-    return { token: saved.token, expiresAt: saved.expiresAt };
+    return { message: 'If that email exists, a reset link has been sent.' };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
