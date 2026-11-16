@@ -1,4 +1,3 @@
-import { randomBytes } from 'crypto';
 import {
   BadRequestException,
   Injectable,
@@ -8,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserRole } from '../common/enums/user-role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
+import { createToken } from '../common/utils/token.util';
 import { MailService } from '../mail/mail.service';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { User } from './entities/user.entity';
@@ -84,7 +84,7 @@ export class UsersService {
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
     const token = this.verificationTokens.create({
       userId: user.id,
-      token: randomBytes(24).toString('hex'),
+      token: createToken(),
       expiresAt,
       usedAt: null,
     });
