@@ -34,10 +34,8 @@ export class UsersService {
     return user;
   }
 
-  async getProfile(id: number) {
-    const user = await this.findById(id);
-    const { passwordHash, ...profile } = user;
-    return profile;
+  getProfile(id: number) {
+    return this.findById(id);
   }
 
   async updateProfile(id: number, changes: { name?: string }) {
@@ -45,9 +43,7 @@ export class UsersService {
     if (changes.name !== undefined) {
       user.name = changes.name;
     }
-    const saved = await this.users.save(user);
-    const { passwordHash, ...profile } = saved;
-    return profile;
+    return this.users.save(user);
   }
 
   createUser(data: {
@@ -63,9 +59,7 @@ export class UsersService {
   async setStatus(id: number, status: UserStatus) {
     const user = await this.findById(id);
     user.status = status;
-    const saved = await this.users.save(user);
-    const { passwordHash, ...profile } = saved;
-    return profile;
+    return this.users.save(user);
   }
 
   suspend(id: number) {
