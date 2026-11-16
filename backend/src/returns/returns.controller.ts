@@ -43,10 +43,7 @@ export class ReturnsController {
 
   @Roles(UserRole.ADMIN)
   @Patch(':id/refund')
-  refund(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: RecordRefundDto,
-  ) {
+  refund(@Param('id', ParseIntPipe) id: number, @Body() dto: RecordRefundDto) {
     return this.returnsService.recordRefund(id, dto);
   }
 }

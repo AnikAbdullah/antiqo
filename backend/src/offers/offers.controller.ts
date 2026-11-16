@@ -43,10 +43,7 @@ export class OffersController {
 
   @Roles(UserRole.BUYER)
   @Patch(':id/use')
-  use(
-    @CurrentUser() current: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  use(@CurrentUser() current: AuthUser, @Param('id', ParseIntPipe) id: number) {
     return this.offersService.use(current.userId, id);
   }
 }
