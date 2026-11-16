@@ -28,7 +28,11 @@ export class MailService {
       this.logger.warn(`Mailer not configured, skipped "${subject}" to ${to}`);
       return;
     }
-    await this.transporter.sendMail({ from: this.from, to, subject, text });
+    try {
+      await this.transporter.sendMail({ from: this.from, to, subject, text });
+    } catch (error) {
+      this.logger.warn(`Could not send "${subject}" to ${to}: ${error}`);
+    }
   }
 
   sendVerificationEmail(to: string, token: string) {

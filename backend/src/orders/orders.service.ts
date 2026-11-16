@@ -64,7 +64,9 @@ export class OrdersService {
           lock: { mode: 'pessimistic_write' },
         });
         if (!product) {
-          throw new NotFoundException('A product in your cart no longer exists.');
+          throw new NotFoundException(
+            'A product in your cart no longer exists.',
+          );
         }
         if (product.stock < line.quantity) {
           throw new ConflictException(
@@ -177,7 +179,9 @@ export class OrdersService {
       );
     }
     if (order.paymentStatus !== PaymentStatus.COD_PENDING) {
-      throw new BadRequestException('Payment is already settled for this order.');
+      throw new BadRequestException(
+        'Payment is already settled for this order.',
+      );
     }
     order.paymentStatus = PaymentStatus.COD_COLLECTED;
     return this.orders.save(order);

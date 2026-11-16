@@ -90,7 +90,10 @@ export class ProductsService {
     }
 
     const page = filters.page && filters.page > 0 ? filters.page : 1;
-    const limit = Math.min(filters.limit && filters.limit > 0 ? filters.limit : 12, 50);
+    const limit = Math.min(
+      filters.limit && filters.limit > 0 ? filters.limit : 12,
+      50,
+    );
 
     const [items, total] = await this.products.findAndCount({
       where,

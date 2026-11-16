@@ -24,7 +24,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const body = exception.getResponse();
-      message = typeof body === 'string' ? body : ((body as any).message ?? message);
+      message =
+        typeof body === 'string' ? body : ((body as any).message ?? message);
     } else if (exception instanceof QueryFailedError) {
       const pgError = exception as any;
       if (pgError.code === '23505') {
