@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { createToken } from '../common/utils/token.util';
 import {
   BadRequestException,
   ConflictException,
@@ -68,7 +68,7 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
     const token = this.resetTokens.create({
       userId: user.id,
-      token: randomBytes(24).toString('hex'),
+      token: createToken(),
       expiresAt,
       usedAt: null,
     });

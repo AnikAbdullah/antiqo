@@ -1,4 +1,3 @@
-import { randomBytes } from 'crypto';
 import {
   BadRequestException,
   Injectable,
@@ -8,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserRole } from '../common/enums/user-role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
+import { createToken } from '../common/utils/token.util';
 import { MailService } from '../mail/mail.service';
 import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { User } from './entities/user.entity';
@@ -34,10 +34,8 @@ export class UsersService {
     return user;
   }
 
-  async getProfile(id: number) {
-    const user = await this.findById(id);
-    const { passwordHash, ...profile } = user;
-    return profile;
+  getProfile(id: number) {
+    return this.findById(id);
   }
 
   async updateProfile(id: number, changes: { name?: string }) {
@@ -45,9 +43,7 @@ export class UsersService {
     if (changes.name !== undefined) {
       user.name = changes.name;
     }
-    const saved = await this.users.save(user);
-    const { passwordHash, ...profile } = saved;
-    return profile;
+    return this.users.save(user);
   }
 
   createUser(data: {
@@ -63,9 +59,7 @@ export class UsersService {
   async setStatus(id: number, status: UserStatus) {
     const user = await this.findById(id);
     user.status = status;
-    const saved = await this.users.save(user);
-    const { passwordHash, ...profile } = saved;
-    return profile;
+    return this.users.save(user);
   }
 
   suspend(id: number) {
@@ -90,7 +84,7 @@ export class UsersService {
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
     const token = this.verificationTokens.create({
       userId: user.id,
-      token: randomBytes(24).toString('hex'),
+      token: createToken(),
       expiresAt,
       usedAt: null,
     });
