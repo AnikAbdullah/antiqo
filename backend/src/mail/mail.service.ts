@@ -9,6 +9,11 @@ export class MailService {
   private readonly from: string;
   private readonly appUrl: string;
 
+  private readonly font =
+    "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Helvetica,Arial,sans-serif";
+  private readonly gradient =
+    'linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#ec4899 100%)';
+
   constructor(private readonly config: ConfigService) {
     const user = this.config.get<string>('MAIL_USER') || '';
     const pass = this.config.get<string>('MAIL_PASS') || '';
@@ -53,33 +58,33 @@ export class MailService {
   private layout(heading: string, inner: string): string {
     return `<!doctype html>
 <html lang="en">
-  <body style="margin:0;padding:0;background-color:#f4efe7;font-family:Georgia,'Times New Roman',serif;color:#3a2f26;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4efe7;padding:32px 0;">
+  <body style="margin:0;padding:0;background-color:#eef0fb;font-family:${this.font};color:#3a3550;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0fb;padding:40px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#fffdf9;border:1px solid #e6dccb;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(58,47,38,0.06);">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 10px 40px rgba(99,102,241,0.15);">
             <tr>
-              <td style="background-color:#5a4433;padding:28px 40px;text-align:center;">
+              <td style="background-color:#7c3aed;background-image:${this.gradient};padding:40px 40px 36px 40px;text-align:center;">
                 <a href="${this.appUrl}" style="text-decoration:none;">
-                  <span style="font-size:26px;font-weight:bold;letter-spacing:4px;color:#f4efe7;text-transform:uppercase;">Antiqo</span>
+                  <span style="font-size:30px;font-weight:800;letter-spacing:3px;color:#ffffff;text-transform:uppercase;">Antiqo</span>
                 </a>
-                <div style="margin-top:6px;font-size:12px;letter-spacing:2px;color:#c7a97e;font-style:italic;">curated vintage finds</div>
+                <div style="margin-top:8px;font-size:13px;letter-spacing:3px;color:rgba(255,255,255,0.85);text-transform:uppercase;">Curated Vintage Finds</div>
               </td>
             </tr>
             <tr>
-              <td style="padding:36px 40px 28px 40px;">
-                <h1 style="margin:0 0 18px 0;font-size:21px;font-weight:normal;color:#5a4433;">${heading}</h1>
+              <td style="padding:40px 44px 32px 44px;">
+                <h1 style="margin:0 0 20px 0;font-size:24px;font-weight:700;color:#1e1b4b;">${heading}</h1>
                 ${inner}
               </td>
             </tr>
             <tr>
-              <td style="padding:22px 40px;background-color:#faf6ef;border-top:1px solid #e6dccb;text-align:center;">
-                <div style="margin-bottom:10px;">
-                  <a href="${this.appUrl}" style="color:#5a4433;text-decoration:none;font-size:13px;margin:0 10px;">Browse the marketplace</a>
-                  <span style="color:#c7a97e;">&middot;</span>
-                  <a href="${this.appUrl}/api/docs" style="color:#5a4433;text-decoration:none;font-size:13px;margin:0 10px;">Help &amp; API</a>
+              <td style="padding:26px 44px;background-color:#f7f6ff;border-top:1px solid #ecebfb;text-align:center;">
+                <div style="margin-bottom:12px;">
+                  <a href="${this.appUrl}" style="color:#7c3aed;text-decoration:none;font-size:13px;font-weight:600;margin:0 12px;">Browse the marketplace</a>
+                  <span style="color:#c7bdf5;">&bull;</span>
+                  <a href="${this.appUrl}/api/docs" style="color:#7c3aed;text-decoration:none;font-size:13px;font-weight:600;margin:0 12px;">Help &amp; API</a>
                 </div>
-                <div style="font-size:12px;color:#9a8b78;line-height:1.6;">
+                <div style="font-size:12px;color:#a099c0;line-height:1.7;">
                   You are receiving this because an action was taken on your Antiqo account.<br />
                   &copy; ${new Date().getFullYear()} Antiqo &middot; A marketplace for vintage treasures
                 </div>
@@ -94,39 +99,39 @@ export class MailService {
   }
 
   private paragraph(text: string): string {
-    return `<p style="margin:0 0 16px 0;font-size:16px;line-height:1.65;color:#3a2f26;">${text}</p>`;
+    return `<p style="margin:0 0 16px 0;font-size:16px;line-height:1.65;color:#514b6b;">${text}</p>`;
   }
 
   private button(label: string, href: string): string {
-    return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto;">
+    return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px auto;">
       <tr>
-        <td style="border-radius:8px;background-color:#5a4433;box-shadow:0 2px 5px rgba(58,47,38,0.18);">
-          <a href="${href}" style="display:inline-block;padding:14px 34px;font-family:Georgia,'Times New Roman',serif;font-size:15px;font-weight:bold;letter-spacing:0.5px;color:#f4efe7;text-decoration:none;">${label}</a>
+        <td style="border-radius:12px;background-color:#7c3aed;background-image:${this.gradient};box-shadow:0 8px 20px rgba(124,58,237,0.35);">
+          <a href="${href}" style="display:inline-block;padding:15px 40px;font-family:${this.font};font-size:16px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;">${label}</a>
         </td>
       </tr>
     </table>`;
   }
 
   private tokenBox(label: string, token: string): string {
-    return `<div style="margin:20px 0;padding:16px 20px;background-color:#f4efe7;border:1px dashed #c7a97e;border-radius:10px;text-align:center;">
-      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#9a8b78;margin-bottom:8px;">${label}</div>
-      <div style="font-family:'Courier New',monospace;font-size:16px;font-weight:bold;letter-spacing:1px;color:#5a4433;word-break:break-all;">${token}</div>
+    return `<div style="margin:22px 0;padding:20px;background-color:#f5f3ff;border:1px dashed #c4b5fd;border-radius:14px;text-align:center;">
+      <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#a78bfa;margin-bottom:10px;font-weight:600;">${label}</div>
+      <div style="font-family:'SF Mono','Courier New',monospace;font-size:18px;font-weight:700;letter-spacing:2px;color:#6d28d9;word-break:break-all;">${token}</div>
     </div>`;
   }
 
   private fallbackLink(href: string): string {
-    return `<p style="margin:4px 0 0 0;font-size:13px;line-height:1.6;color:#9a8b78;">If the button does not work, copy and paste this link into your browser:<br /><a href="${href}" style="color:#5a4433;word-break:break-all;">${href}</a></p>`;
+    return `<p style="margin:6px 0 0 0;font-size:13px;line-height:1.6;color:#a099c0;">If the button does not work, copy and paste this link into your browser:<br /><a href="${href}" style="color:#7c3aed;word-break:break-all;">${href}</a></p>`;
   }
 
   private detailRow(label: string, value: string): string {
     return `<tr>
-      <td style="padding:10px 0;border-bottom:1px solid #efe7da;font-size:14px;color:#9a8b78;">${label}</td>
-      <td style="padding:10px 0;border-bottom:1px solid #efe7da;font-size:15px;font-weight:bold;color:#3a2f26;text-align:right;">${value}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #efedfb;font-size:14px;color:#a099c0;">${label}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #efedfb;font-size:15px;font-weight:700;color:#1e1b4b;text-align:right;">${value}</td>
     </tr>`;
   }
 
   private detailTable(rows: string): string {
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px 0;">${rows}</table>`;
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 22px 0;background-color:#faf9ff;border-radius:14px;padding:4px 20px;">${rows}</table>`;
   }
 
   sendVerificationEmail(to: string, token: string) {
