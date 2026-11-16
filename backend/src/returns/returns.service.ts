@@ -72,7 +72,9 @@ export class ReturnsService {
       throw new NotFoundException('Return not found.');
     }
     if (record.status !== ReturnStatus.REQUESTED) {
-      throw new BadRequestException('Only a requested return can be inspected.');
+      throw new BadRequestException(
+        'Only a requested return can be inspected.',
+      );
     }
     record.status = ReturnStatus.INSPECTED;
     record.resaleFit = dto.resaleFit;
@@ -94,7 +96,9 @@ export class ReturnsService {
       throw new NotFoundException('Order not found.');
     }
     if (order.paymentStatus !== PaymentStatus.COD_COLLECTED) {
-      throw new BadRequestException('Refund requires COD to be collected first.');
+      throw new BadRequestException(
+        'Refund requires COD to be collected first.',
+      );
     }
     if (record.resaleFit) {
       const items = await this.orderItems.find({

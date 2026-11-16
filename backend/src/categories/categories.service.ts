@@ -44,7 +44,9 @@ export class CategoriesService {
         where: { name: dto.name, id: Not(id) },
       });
       if (taken) {
-        throw new ConflictException('A category with this name already exists.');
+        throw new ConflictException(
+          'A category with this name already exists.',
+        );
       }
       category.name = dto.name;
     }

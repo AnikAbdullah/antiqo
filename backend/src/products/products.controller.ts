@@ -33,10 +33,16 @@ interface UploadedImage {
   originalname: string;
 }
 
+type FileFilterCallback = (error: Error | null, acceptFile: boolean) => void;
+
 const imageUpload = {
   dest: uploadDir,
   limits: { fileSize: 2 * 1024 * 1024 },
-  fileFilter: (_req: unknown, file: UploadedImage, cb: Function) => {
+  fileFilter: (
+    _req: unknown,
+    file: UploadedImage,
+    cb: FileFilterCallback,
+  ) => {
     if (!file.mimetype.startsWith('image/')) {
       cb(new BadRequestException('Only image files are allowed.'), false);
       return;
