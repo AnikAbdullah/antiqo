@@ -9,29 +9,40 @@ export class MailService {
   private readonly from: string;
 
   constructor(private readonly config: ConfigService) {
-    const host = this.config.get<string>('MAIL_HOST');
-    const user = this.config.get<string>('MAIL_USER');
-    const pass = this.config.get<string>('MAIL_PASS');
-    const port = Number(this.config.get<string>('MAIL_PORT') ?? '2525');
+    const user = this.config.get<string>('MAIL_USER') || '';
+    const pass = this.config.get<string>('MAIL_PASS') || '';
     this.from =
-      this.config.get<string>('MAIL_FROM') ?? 'Antiqo <no-reply@antiqo.local>';
+      this.config.get<string>('MAIL_FROM') || user || 'no-reply@antiqo.local';
 
-    if (host && user && pass) {
-      this.transporter = createTransport({ host, port, auth: { user, pass } });
+    if (user && pass) {
+      this.transporter = createTransport({
+        host: this.config.get<string>('MAIL_HOST') || 'smtp.gmail.com',
+        port: Number(this.config.get('MAIL_PORT') ?? 587),
+        secure: this.config.get('MAIL_SECURE') === 'true',
+        auth: { user, pass },
+      });
     } else {
       this.transporter = null;
+      this.logger.warn(
+        'Mail is not configured (MAIL_USER/MAIL_PASS missing); emails will be skipped.',
+      );
     }
   }
 
-  private async send(to: string, subject: string, text: string) {
+  private async send(to: string, subject: string, html: string): Promise<void> {
     if (!this.transporter) {
-      this.logger.warn(`Mailer not configured, skipped "${subject}" to ${to}`);
+      this.logger.warn(
+        `Skipped email to ${to} ("${subject}") — mailer not configured.`,
+      );
       return;
     }
     try {
-      await this.transporter.sendMail({ from: this.from, to, subject, text });
+      await this.transporter.sendMail({ from: this.from, to, subject, html });
+      this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (error) {
-      this.logger.warn(`Could not send "${subject}" to ${to}: ${error}`);
+      this.logger.error(
+        `Failed to send email to ${to}: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -39,7 +50,7 @@ export class MailService {
     return this.send(
       to,
       'Verify your Antiqo email',
-      `Welcome to Antiqo. Use this token to verify your email: ${token}`,
+      `<p>Welcome to Antiqo.</p><p>Use this token to verify your email:</p><p><strong>${token}</strong></p>`,
     );
   }
 
@@ -47,7 +58,7 @@ export class MailService {
     return this.send(
       to,
       'Reset your Antiqo password',
-      `Use this token to reset your password: ${token}`,
+      `<p>Use this token to reset your password:</p><p><strong>${token}</strong></p>`,
     );
   }
 
@@ -55,7 +66,7 @@ export class MailService {
     return this.send(
       to,
       'Welcome to Antiqo',
-      `Hi ${name}, your Antiqo account is ready. Happy hunting for vintage finds.`,
+      `<p>Hi ${name},</p><p>Your Antiqo account is ready. Happy hunting for vintage finds.</p>`,
     );
   }
 
@@ -63,7 +74,7 @@ export class MailService {
     return this.send(
       to,
       `Your Antiqo order #${orderId}`,
-      `Thanks for shopping with Antiqo. Order #${orderId} is placed, total ${total}. We will email you as it moves along.`,
+      `<p>Thanks for shopping with Antiqo.</p><p>Order <strong>#${orderId}</strong> is placed, total <strong>${total}</strong>. We will email you as it moves along.</p>`,
     );
   }
 
@@ -71,7 +82,7 @@ export class MailService {
     return this.send(
       to,
       `Your Antiqo return #${returnId}`,
-      `There is an update on your return #${returnId}: it is now ${status}.`,
+      `<p>There is an update on your return <strong>#${returnId}</strong>: it is now <strong>${status}</strong>.</p>`,
     );
   }
 }
