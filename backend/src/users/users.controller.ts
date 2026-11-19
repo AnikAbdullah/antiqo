@@ -14,6 +14,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import type { AuthUser } from '../common/interfaces/authenticated-request.interface';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { UsersService } from './users.service';
@@ -42,6 +43,12 @@ export class UsersController {
   @Post('email/verify')
   verifyEmail(@Body() dto: VerifyEmailDto) {
     return this.usersService.verifyEmail(dto.token);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post()
+  createUser(@Body() dto: CreateUserDto) {
+    return this.usersService.createAccount(dto);
   }
 
   @Roles(UserRole.ADMIN)

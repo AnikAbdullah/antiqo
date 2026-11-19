@@ -1,10 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as argon2 from 'argon2';
 import { UserRole } from '../common/enums/user-role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
 import { createToken } from '../common/utils/token.util';
@@ -54,6 +56,25 @@ export class UsersService {
   }) {
     const user = this.users.create(data);
     return this.users.save(user);
+  }
+
+  async createAccount(data: {
+    name: string;
+    email: string;
+    password: string;
+    role: UserRole;
+  }) {
+    const existing = await this.findByEmail(data.email);
+    if (existing) {
+      throw new ConflictException('An account with this email already exists.');
+    }
+    const passwordHash = await argon2.hash(data.password);
+    return this.createUser({
+      name: data.name,
+      email: data.email,
+      passwordHash,
+      role: data.role,
+    });
   }
 
   async setStatus(id: number, status: UserStatus) {
