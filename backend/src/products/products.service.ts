@@ -169,7 +169,7 @@ export class ProductsService {
   async addImage(
     sellerId: number,
     productId: number,
-    file: { path: string } | undefined,
+    file: Express.Multer.File | undefined,
   ) {
     if (!file) {
       throw new BadRequestException('No image uploaded.');
@@ -177,7 +177,7 @@ export class ProductsService {
     const product = await this.findOwned(sellerId, productId);
     const image = this.productImages.create({
       productId: product.id,
-      path: file.path,
+      path: `/uploads/products/${file.filename}`,
     });
     return this.productImages.save(image);
   }

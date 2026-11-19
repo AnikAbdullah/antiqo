@@ -1,4 +1,5 @@
 import { mkdirSync } from 'fs';
+import { extname } from 'path';
 import {
   BadRequestException,
   Body,
@@ -14,6 +15,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -26,21 +29,20 @@ import { UpdateProductDto } from './dto/update-product.dto';
 const uploadDir = './uploads/products';
 mkdirSync(uploadDir, { recursive: true });
 
-interface UploadedImage {
-  path: string;
-  mimetype: string;
-  size: number;
-  originalname: string;
-}
-
 type FileFilterCallback = (error: Error | null, acceptFile: boolean) => void;
 
 const imageUpload = {
-  dest: uploadDir,
+  storage: diskStorage({
+    destination: uploadDir,
+    filename: (_req, file, cb) => {
+      const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      cb(null, `${unique}${extname(file.originalname)}`);
+    },
+  }),
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (
     _req: unknown,
-    file: UploadedImage,
+    file: Express.Multer.File,
     cb: FileFilterCallback,
   ) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -120,11 +122,20 @@ export class ProductsController {
 
   @Roles(UserRole.SELLER)
   @Post(':id/images')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('image', imageUpload))
   uploadImage(
     @CurrentUser() current: AuthUser,
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: UploadedImage,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.productsService.addImage(current.userId, id, file);
   }
